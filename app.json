@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Laura's Ateliê",
+    "slug": "lauras-atelie-mobile",
+    "scheme": "lauras-atelie",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F0EB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.atelierchiquecrochet.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/logo.png",
+        "backgroundColor": "#F5F0EB"
+      },
+      "package": "com.atelierchiquecrochet.app"
+    },
+    "web": {
+      "favicon": "./src/assets/logo.png"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
