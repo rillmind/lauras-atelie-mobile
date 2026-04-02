@@ -67,25 +67,25 @@ const Admin = () => {
       setUploadingImage(true);
 
       try {
+        // Converter URI para Blob (necessário para web)
+        const response = await fetch(image.uri);
+        const blob = await response.blob();
+        
         const formData = new FormData();
-        formData.append("file", {
-          uri: image.uri,
-          name: image.fileName || `image-${Date.now()}.jpg`,
-          type: image.mimeType || "image/jpeg",
-        } as any);
+        formData.append("file", blob, image.fileName || `image-${Date.now()}.jpg`);
 
-        const response = await fetch(`${API_URL}/upload`, {
+        const uploadResponse = await fetch(`${API_URL}/upload`, {
           method: "POST",
           body: formData,
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
           console.error("Erro na resposta:", errorData);
           throw new Error(errorData.message || "Erro no upload");
         }
 
-        const data = await response.json();
+        const data = await uploadResponse.json();
         setForm({ ...form, imagemUrl: data.imagemUrl });
       } catch (error: any) {
         console.error("Erro no upload:", error.message);
