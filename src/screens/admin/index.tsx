@@ -45,7 +45,7 @@ const Admin = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const API_URL = "http://192.168.1.110:3001";
+  const API_URL = "https://lauras-atelie-api.onrender.com";
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();

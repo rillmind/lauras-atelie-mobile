@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.1.110:3001";
+const API_BASE_URL = "https://lauras-atelie-api.onrender.com";
 
 export interface Product {
   id: number;
