@@ -35,7 +35,7 @@ const ProductCard = ({ product, index }: ProductCardProps) => {
     <Link href={`/produto/${product.id}`} asChild>
       <TouchableOpacity style={styles.card} activeOpacity={0.8}>
         <Image
-          source={{ uri: product.imagem || PLACEHOLDER_IMAGE }}
+          source={{ uri: product.imagemUrl || PLACEHOLDER_IMAGE }}
           style={styles.image}
           resizeMode="cover"
         />

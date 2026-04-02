@@ -131,7 +131,7 @@ const ProductDetail = () => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Image
-          source={{ uri: product.imagem || "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=400&fit=crop" }}
+          source={{ uri: product.imagemUrl || "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=400&fit=crop" }}
           style={styles.image}
           resizeMode="cover"
         />

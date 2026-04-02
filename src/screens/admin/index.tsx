@@ -8,10 +8,12 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useProducts } from "@/contexts/ProductContext";
 
 const COLORS = {
@@ -36,11 +38,63 @@ const Admin = () => {
     descricao: "",
     preco: "",
     categoria: "pronta" as "pronta" | "encomenda",
-    imagem: "",
+    imagemUrl: "",
     materiais: "",
     dimensoes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const API_URL = "http://192.168.1.110:3001";
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (!permissionResult.granted) {
+      Alert.alert("Permissão necessária", "É preciso permitir o acesso às fotos para selecionar imagens.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const image = result.assets[0];
+      setUploadingImage(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", {
+          uri: image.uri,
+          name: image.fileName || `image-${Date.now()}.jpg`,
+          type: image.mimeType || "image/jpeg",
+        } as any);
+
+        const response = await fetch(`${API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Erro na resposta:", errorData);
+          throw new Error(errorData.message || "Erro no upload");
+        }
+
+        const data = await response.json();
+        setForm({ ...form, imagemUrl: data.imagemUrl });
+      } catch (error: any) {
+        console.error("Erro no upload:", error.message);
+        Alert.alert("Erro", error.message || "Não foi possível enviar a imagem.");
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.nome || !form.preco) {
@@ -53,7 +107,7 @@ const Admin = () => {
         nome: form.nome,
         descricao: form.descricao || null,
         preco: parseFloat(form.preco),
-        imagem: form.imagem || null,
+        imagemUrl: form.imagemUrl || null,
         categoria: form.categoria,
         materiais: form.materiais.split(",").map((m) => m.trim()).filter(Boolean),
         dimensoes: form.dimensoes || null,
@@ -64,7 +118,7 @@ const Admin = () => {
         descricao: "",
         preco: "",
         categoria: "pronta",
-        imagem: "",
+        imagemUrl: "",
         materiais: "",
         dimensoes: "",
       });
@@ -89,6 +143,27 @@ const Admin = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.field}>
+          <Text style={styles.label}>Imagem da Peça</Text>
+          <TouchableOpacity
+            style={styles.imagePicker}
+            onPress={pickImage}
+            disabled={uploadingImage}
+            activeOpacity={0.7}
+          >
+            {uploadingImage ? (
+              <ActivityIndicator color={COLORS.primary} />
+            ) : form.imagemUrl ? (
+              <Image source={{ uri: form.imagemUrl }} style={styles.imagePreview} />
+            ) : (
+              <View style={styles.imagePickerPlaceholder}>
+                <Ionicons name="image-outline" size={32} color={COLORS.mutedForeground} />
+                <Text style={styles.imagePickerText}>Toque para selecionar imagem</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.field}>
           <Text style={styles.label}>Nome da Peça *</Text>
           <TextInput
@@ -221,6 +296,31 @@ const styles = StyleSheet.create({
   },
   field: {
     marginBottom: 16,
+  },
+  imagePicker: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    backgroundColor: COLORS.muted,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: "hidden",
+  },
+  imagePickerPlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  imagePickerText: {
+    fontSize: 14,
+    fontFamily: "Nunito",
+    color: COLORS.mutedForeground,
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   row: {
     flexDirection: "row",

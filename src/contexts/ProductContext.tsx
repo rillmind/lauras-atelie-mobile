@@ -16,10 +16,12 @@ export interface Product {
   nome: string;
   descricao: string | null;
   preco: number;
-  categoria: "pronta" | "encomenda";
-  imagem: string | null;
+  categoria: string;
+  imagemUrl: string | null;
   materiais: string[];
   dimensoes: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Client {
@@ -27,6 +29,9 @@ export interface Client {
   nome: string;
   email: string;
   telefone: string;
+  isAdmin?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ProductContextType {

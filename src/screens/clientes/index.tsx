@@ -26,8 +26,7 @@ const COLORS = {
   mutedForeground: "#8A7A6E",
   border: "#D5C9BC",
   rose: "#D4A0B0",
-  logout: "#E78284",
-  logoutForeground: "#F5F0EB",
+  red: "#f38ba8",
 };
 
 const Clients = () => {
@@ -37,6 +36,8 @@ const Clients = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptNotifications, setAcceptNotifications] = useState(false);
   const [submittingClient, setSubmittingClient] = useState(false);
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -49,6 +50,10 @@ const Clients = () => {
       Alert.alert("Erro", "Preencha nome, email e telefone.");
       return;
     }
+    if (!acceptTerms) {
+      Alert.alert("Erro", "Aceite os termos de uso para continuar.");
+      return;
+    }
     try {
       setSubmittingClient(true);
       await addClient({ nome: name, email: email, telefone: phone });
@@ -56,6 +61,8 @@ const Clients = () => {
       setName("");
       setEmail("");
       setPhone("");
+      setAcceptTerms(false);
+      setAcceptNotifications(false);
     } catch {
       Alert.alert("Erro", "Não foi possível cadastrar o cliente.");
     } finally {
@@ -110,153 +117,186 @@ const Clients = () => {
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={18} color={COLORS.logout} />
+            <Text style={styles.logoutButtonText}>Sair</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <ScrollView
-        style={styles.main}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {!isAdmin && (
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome completo"
-              placeholderTextColor={COLORS.mutedForeground}
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={COLORS.mutedForeground}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Telefone / WhatsApp"
-              placeholderTextColor={COLORS.mutedForeground}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-            />
-            <TouchableOpacity
-              style={[styles.submitButton, submittingClient && styles.submitButtonDisabled]}
-              onPress={handleClientSubmit}
-              disabled={submittingClient}
-              activeOpacity={0.8}
-            >
-              {submittingClient ? (
-                <ActivityIndicator color={COLORS.secondaryForeground} />
-              ) : (
-                <>
-                  <Ionicons name="person-add-outline" size={18} color={COLORS.secondaryForeground} />
-                  <Text style={styles.submitButtonText}>Cadastrar Cliente</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {isAdmin && !adminUnlocked && (
-          <View style={styles.adminSection}>
-            <View style={styles.lockRow}>
-              <Ionicons name="lock-closed-outline" size={16} color={COLORS.mutedForeground} />
-              <Text style={styles.lockText}>Login de administrador</Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={COLORS.mutedForeground}
-              value={adminEmail}
-              onChangeText={setAdminEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Senha"
-              placeholderTextColor={COLORS.mutedForeground}
-              secureTextEntry
-              value={adminPassword}
-              onChangeText={setAdminPassword}
-            />
-            <TouchableOpacity
-              style={[styles.unlockButton, verifying && styles.submitButtonDisabled]}
-              onPress={handlePasswordSubmit}
-              disabled={verifying}
-              activeOpacity={0.8}
-            >
-              {verifying ? (
-                <ActivityIndicator color={COLORS.primaryForeground} />
-              ) : (
-                <Text style={styles.unlockButtonText}>Entrar</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {isAdmin && adminUnlocked && (
-          <View style={styles.adminSection}>
-            <View style={styles.formTitleRow}>
-              <Ionicons name="add-circle-outline" size={18} color={COLORS.foreground} />
-              <Text style={styles.formTitle}>Cadastrar Peça</Text>
-            </View>
-            <Text style={styles.adminHint}>Use a tela dedicada de admin para cadastrar peças.</Text>
-            <TouchableOpacity
-              style={styles.goToAdminButton}
-              onPress={() => router.push("/admin")}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="arrow-forward" size={18} color={COLORS.primaryForeground} />
-              <Text style={styles.goToAdminButtonText}>Ir para Admin</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {adminUnlocked && clients.length > 0 && (
+      {isAdmin && adminUnlocked ? (
+        <ScrollView
+          style={styles.main}
+          contentContainerStyle={styles.clientsScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.clientsSection}>
             <Text style={styles.clientsTitle}>Contatos Cadastrados</Text>
-            {clients.map((client) => (
-              <View key={client.id} style={styles.clientCard}>
-                <View style={styles.clientAvatar}>
-                  <Text style={styles.clientAvatarText}>
-                    {client.nome.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.clientInfo}>
-                  <Text style={styles.clientName} numberOfLines={1}>
-                    {client.nome}
-                  </Text>
-                  <View style={styles.phoneRow}>
-                    <Ionicons name="call-outline" size={12} color={COLORS.mutedForeground} />
-                    <Text style={styles.clientPhone}>{client.telefone}</Text>
+            {clients.length === 0 ? (
+              <Text style={styles.noClientsText}>Nenhum cliente cadastrado.</Text>
+            ) : (
+              clients.map((client) => (
+                <View key={client.id} style={styles.clientCard}>
+                  <View style={styles.clientAvatar}>
+                    <Text style={styles.clientAvatarText}>
+                      {client.nome.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.clientInfo}>
+                    <Text style={styles.clientName} numberOfLines={1}>
+                      {client.nome}
+                    </Text>
+                    <View style={styles.phoneRow}>
+                      <Ionicons name="call-outline" size={12} color={COLORS.mutedForeground} />
+                      <Text style={styles.clientPhone}>{client.telefone}</Text>
+                    </View>
+                    <View style={styles.emailRow}>
+                      <Ionicons name="mail-outline" size={12} color={COLORS.mutedForeground} />
+                      <Text style={styles.clientEmail} numberOfLines={1}>
+                        {client.email}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
-        )}
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.main}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {!isAdmin && (
+            <View style={styles.formWrapper}>
+              <View style={styles.form}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nome completo"
+                  placeholderTextColor={COLORS.mutedForeground}
+                  value={name}
+                  onChangeText={setName}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor={COLORS.mutedForeground}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Telefone / WhatsApp"
+                  placeholderTextColor={COLORS.mutedForeground}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                />
 
-        {!adminUnlocked && (
-          <TouchableOpacity
-            style={styles.adminToggle}
-            onPress={handleAdminToggle}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, isAdmin && styles.checkboxActive]}>
-              {isAdmin && <Ionicons name="checkmark" size={12} color={COLORS.primaryForeground} />}
+                <TouchableOpacity
+                  style={[styles.submitButton, submittingClient && styles.submitButtonDisabled]}
+                  onPress={handleClientSubmit}
+                  disabled={submittingClient}
+                  activeOpacity={0.8}
+                >
+                  {submittingClient ? (
+                    <ActivityIndicator color={COLORS.secondaryForeground} />
+                  ) : (
+                    <>
+                      <Ionicons name="person-add-outline" size={18} color={COLORS.secondaryForeground} />
+                      <Text style={styles.submitButtonText}>Cadastrar Cliente</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.checkboxRow}
+                  onPress={() => setAcceptTerms(!acceptTerms)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, acceptTerms && styles.checkboxActive]}>
+                    {acceptTerms && <Ionicons name="checkmark" size={12} color={COLORS.primaryForeground} />}
+                  </View>
+                  <Text style={styles.checkboxLabel}>Aceito os termos de uso</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.checkboxRow}
+                  onPress={() => setAcceptNotifications(!acceptNotifications)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, acceptNotifications && styles.checkboxActive]}>
+                    {acceptNotifications && <Ionicons name="checkmark" size={12} color={COLORS.primaryForeground} />}
+                  </View>
+                  <Text style={styles.checkboxLabel}>Receber notificação de novas peças no email</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Text style={styles.adminToggleText}>Sou administrador</Text>
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+          )}
+
+          {isAdmin && !adminUnlocked && (
+            <View style={styles.adminSection}>
+              <View style={styles.lockRow}>
+                <Ionicons name="lock-closed-outline" size={16} color={COLORS.mutedForeground} />
+                <Text style={styles.lockText}>Login de administrador</Text>
+              </View>
+              <TextInput
+                style={styles.adminInput}
+                placeholder="Email"
+                placeholderTextColor={COLORS.mutedForeground}
+                value={adminEmail}
+                onChangeText={setAdminEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <TextInput
+                style={styles.adminInput}
+                placeholder="Senha"
+                placeholderTextColor={COLORS.mutedForeground}
+                secureTextEntry
+                value={adminPassword}
+                onChangeText={setAdminPassword}
+              />
+              <TouchableOpacity
+                style={[styles.unlockButton, verifying && styles.submitButtonDisabled]}
+                onPress={handlePasswordSubmit}
+                disabled={verifying}
+                activeOpacity={0.8}
+              >
+                {verifying ? (
+                  <ActivityIndicator color={COLORS.primaryForeground} />
+                ) : (
+                  <Text style={styles.unlockButtonText}>Entrar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!adminUnlocked && (
+            <TouchableOpacity
+              style={styles.adminToggle}
+              onPress={handleAdminToggle}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.adminCheckbox, isAdmin && styles.adminCheckboxActive]}>
+                {isAdmin && <Ionicons name="checkmark" size={12} color={COLORS.primaryForeground} />}
+              </View>
+              <Text style={styles.adminToggleText}>Sou administrador</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      )}
+
+      {isAdmin && adminUnlocked && (
+        <TouchableOpacity
+          style={styles.floatingAdminButton}
+          onPress={() => router.push("/admin")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={28} color={COLORS.primaryForeground} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
@@ -277,18 +317,24 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     fontFamily: "PlayfairDisplay",
     color: COLORS.foreground,
   },
   logoutButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.logout,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
+  },
+  logoutButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    fontFamily: "Nunito",
+    color: COLORS.red,
   },
   main: {
     flex: 1,
@@ -296,12 +342,38 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 24,
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  clientsScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    flexGrow: 1,
+  },
+  formWrapper: {
+    width: "100%",
+    maxWidth: 400,
+    justifyContent: "center",
   },
   form: {
     gap: 12,
     marginBottom: 16,
   },
   input: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.muted,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    color: COLORS.foreground,
+    fontFamily: "Nunito",
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  adminInput: {
     width: "100%",
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -340,7 +412,33 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     opacity: 0.5,
   },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 8,
+  },
   checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: COLORS.mutedForeground,
+    backgroundColor: COLORS.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    fontFamily: "Nunito",
+    color: COLORS.foreground,
+    flex: 1,
+  },
+  adminCheckbox: {
     width: 14,
     height: 14,
     borderRadius: 3,
@@ -350,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxActive: {
+  adminCheckboxActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
@@ -362,6 +460,8 @@ const styles = StyleSheet.create({
   adminSection: {
     gap: 0,
     marginTop: 16,
+    width: "100%",
+    maxWidth: 400,
   },
   lockRow: {
     flexDirection: "row",
@@ -387,42 +487,35 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito",
     color: COLORS.primaryForeground,
   },
-  formTitleRow: {
-    flexDirection: "row",
+  floatingAdminButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    zIndex: 50,
   },
-  formTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    fontFamily: "PlayfairDisplay",
-    color: COLORS.foreground,
-  },
-  adminHint: {
+  noClientsText: {
     fontSize: 14,
     fontFamily: "Nunito",
     color: COLORS.mutedForeground,
-    marginBottom: 12,
-  },
-  goToAdminButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  goToAdminButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    fontFamily: "Nunito",
-    color: COLORS.primaryForeground,
+    textAlign: "center",
+    marginTop: 24,
   },
   clientsSection: {
     marginTop: 24,
     gap: 12,
+    width: "100%",
+    maxWidth: 400,
   },
   clientsTitle: {
     fontSize: 16,
@@ -472,6 +565,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   clientPhone: {
+    fontSize: 12,
+    fontFamily: "Nunito",
+    color: COLORS.mutedForeground,
+  },
+  emailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  clientEmail: {
     fontSize: 12,
     fontFamily: "Nunito",
     color: COLORS.mutedForeground,

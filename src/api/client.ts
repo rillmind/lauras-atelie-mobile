@@ -6,7 +6,7 @@ export interface Product {
   descricao: string | null;
   preco: number;
   categoria: string;
-  imagem: string | null;
+  imagemUrl: string | null;
   materiais: string[];
   dimensoes: string | null;
   createdAt: string;
